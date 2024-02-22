@@ -1,4 +1,4 @@
-from inventory_manager.cli import entry
+from .cli import entry
 
 entry()
 

@@ -26,6 +26,7 @@ class InventoryMenu(Screen):
     changelist: set[Coordinate]
     file: TextIOWrapper
 
+    
     def __init__(self, credentials: Credentials, sheet_id: str) -> None:
         self.credentials = credentials
         self.sheet_id = sheet_id
@@ -42,14 +43,17 @@ class InventoryMenu(Screen):
     class SheetData(Message):
         data: list[list[str]]
 
+        
         def __init__(self, data: list[list[str]]) -> None:
             self.data = data
             super().__init__()
             self.stop()
 
+    
     def action_load(self) -> None:
         self.update_table()
 
+    
     @work(exclusive=True, thread=True)
     async def update_table(self) -> None:
         with build("sheets", "v4", credentials=self.credentials) as service:
@@ -71,6 +75,7 @@ class InventoryMenu(Screen):
                 )
             )
 
+    
     def action_save(self) -> None:
         table = self.query_one(DataTable[str])
         request = {
@@ -84,6 +89,7 @@ class InventoryMenu(Screen):
             sh = service.spreadsheets().values()
             sh.batchUpdate(spreadsheetId=self.sheet_id, body=request).execute()
 
+    
     def on_key(self, event: Key) -> None:
         table = self.query_one(DataTable[str])
         coord = table.cursor_coordinate
@@ -98,6 +104,7 @@ class InventoryMenu(Screen):
         table.refresh_coordinate(coord)
         self.changelist.update([coord])
 
+    
     @on(SheetData)
     def handle_update(self, event: SheetData):
         table = self.query_one(DataTable[str])
@@ -114,5 +121,6 @@ class InventoryMenu(Screen):
         except Exception as e:
             raise NameError from e
 
+    
     def on_mount(self) -> None:
         self.update_table()

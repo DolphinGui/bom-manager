@@ -1,14 +1,23 @@
+from datetime import datetime
 from appdirs import AppDirs
 from pathlib import Path
 import os
-import inventory_manager.secrets as secret
+from .secrets import secretjson
 
 app_dirs = AppDirs("Inventory Manager", "Shin Umeda", "1.0")
 dir = app_dirs.user_config_dir
+logs = app_dirs.user_log_dir
 
 default_files = {
-    "secrets.json": secret.secretjson
+    "secrets.json": secretjson,
+    "config.json": "{}",
 }
+
+
+def getLogpath() -> Path:
+    if not os.path.exists(logs):
+        os.makedirs(logs)
+    return Path(logs) / f"log-{datetime.now()}.txt"
 
 
 def getFile(filename: str) -> Path:

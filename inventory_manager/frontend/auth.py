@@ -6,7 +6,7 @@ import google_auth_httplib2
 from textual.app import ComposeResult
 from textual.widgets import Label, LoadingIndicator
 from textual.screen import ModalScreen
-import inventory_manager.cache as cache
+from .. import cache
 
 app_dirs = AppDirs("Inventory Manager", "Shin Umeda", "1.0")
 dir = app_dirs.user_config_dir
@@ -17,12 +17,14 @@ class AuthMenu(ModalScreen[Credentials]):
         yield Label("Authenticating...")
         yield LoadingIndicator()
 
+    
     def on_mount(self):
         creds = get_creds()
         if creds.expired:
             http = Http()
             creds.refresh(google_auth_httplib2.Request(http))
         self.dismiss(creds)
+
 
 
 def get_creds() -> Credentials:

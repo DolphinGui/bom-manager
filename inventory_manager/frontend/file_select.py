@@ -28,11 +28,13 @@ class FileSelect(ModalScreen[str]):
     files: list[Sheet]
     credentials: Credentials
 
+    
     def __init__(self, creds: Credentials) -> None:
         self.credentials = creds
         self.search()
         super().__init__()
 
+    
     def search(self, term: Optional[str] = None) -> None:
         with build("drive", "v3", credentials=self.credentials) as service:
             if term is None:
@@ -51,20 +53,21 @@ class FileSelect(ModalScreen[str]):
                 Sheet(sheet=SheetFile(x["name"], x["id"])) for x in sh["files"]
             ]
 
+    
     @on(ListView.Selected)
-    def choose(self, event: ListView.Selected)-> None:
+    def choose(self, event: ListView.Selected) -> None:
         self.dismiss(event.item.file.id)
 
-
+    
     def compose(self) -> ComposeResult:
         yield Input(type="text")
         yield ListView(*self.files)
 
+    
     @on(Input.Submitted)
-    def show_invalid_reasons(self, event: Input.Submitted) -> None:
+    def submit_query(self, event: Input.Submitted) -> None:
         self.search(event.value)
         list = self.query_one(ListView)
         list.clear()
         for f in self.files:
             list.append(f)
-

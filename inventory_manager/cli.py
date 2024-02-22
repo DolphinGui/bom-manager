@@ -1,17 +1,19 @@
-from pathlib import Path
 from google.auth.external_account_authorized_user import Credentials
 from typing import Optional
 from textual.app import App
-from inventory_manager.frontend.auth import AuthMenu
-from inventory_manager.frontend.file_select import FileSelect
-from inventory_manager.frontend.inventory_menu import InventoryMenu
+from .cache import getLogpath, loadFile
+from .frontend.auth import AuthMenu
+from .frontend.file_select import FileSelect
+from .frontend.inventory_menu import InventoryMenu
 from textual import work
 from textual.app import ComposeResult
 from textual.widgets import Button, Footer, Header
 from textual.containers import Center
 from textual import on
-
-from inventory_manager.frontend.loading_screen import LoadingScreen
+import json as json
+from weakref import finalize
+import logging
+from .frontend.loading_screen import LoadingScreen
 
 
 def entry():
@@ -20,6 +22,13 @@ def entry():
 
 
 class ManagerApp(App):
+    
+    def __init__(self):
+        super().__init__()
+        logging.basicConfig(
+            filename=getLogpath(), encoding="utf-8", level=logging.DEBUG
+        )
+
     BINDINGS = [
         ("ctrl+d", "toggle_dark", "Toggle dark mode"),
     ]
@@ -27,6 +36,7 @@ class ManagerApp(App):
     SCREENS = {}
 
     credentials: Optional[Credentials]
+    config: dict
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -36,21 +46,42 @@ class ManagerApp(App):
             yield Button("BOM Management", id="bom")
             yield Button("Buy items", id="buy")
 
+    
     @work
     @on(Button.Pressed, "#inv")
     async def action_inv(self):
+        if "inv_id" not in self.config.keys():
+            self.config.update(
+                {"inv_id": await self.push_screen_wait(FileSelect(self.credentials))}
+            )
+        self.push_screen(InventoryMenu(self.credentials, self.config["inv_id"]))
+
+    
+    @work
+    @on(Button.Pressed, "#bom")
+    async def action_bom(self):
         id = await self.push_screen_wait(FileSelect(self.credentials))
         self.push_screen(InventoryMenu(self.credentials, id))
 
+    
     def action_toggle_dark(self) -> None:
         self.dark = not self.dark
 
+    
     def action_loading_screen(self, message: str) -> None:
         self.push_screen(LoadingScreen(message))
 
+    
     @work
     async def on_mount(self):
         self.title = "Inventory Manager"
         self.credentials = await self.push_screen_wait(
             AuthMenu(),
         )
+        self.config = json.loads(loadFile("config.json").read_text())
+
+        def write_config(self):
+            f = loadFile("config.json")
+            f.write_text(json.dumps(self.config))
+
+        finalize(self, write_config, self)
