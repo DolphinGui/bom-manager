@@ -1,0 +1,6 @@
+Button {
+    height: 5;
+    width: 60%;
+    align: center middle;
+    margin: 2;
+}

@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "inventory_manager"
+version = "0.1.0"
+description = ""
+authors = ["Shin Umeda <umeda.shin@gmail.com>"]
+readme = "README.md"
+packages = [{include = "inventory_manager"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+textual-dev = "^1.4.0"
+appdirs = "^1.4.4"
+google-auth-oauthlib = "^1.2.0"
+httplib2 = "^0.22.0"
+google-api-python-client = "^2.118.0"
+
+[tool.poetry.scripts]
+inv-man = "inventory_manager.cli:entry"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
