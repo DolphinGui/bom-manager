@@ -1,6 +1,6 @@
-from google.auth.external_account_authorized_user import Credentials
-from typing import Optional
 from textual.app import App
+from inventory_manager.backend.base import AccessKey
+from inventory_manager.backend.sheets import GoogleCreds
 from .cache import getLogpath, loadFile
 from .frontend.auth import AuthMenu
 from .frontend.file_select import FileSelect
@@ -22,7 +22,6 @@ def entry():
 
 
 class ManagerApp(App):
-    
     def __init__(self):
         super().__init__()
         logging.basicConfig(
@@ -35,7 +34,7 @@ class ManagerApp(App):
     CSS_PATH = "app.tcss"
     SCREENS = {}
 
-    credentials: Credentials
+    credentials: AccessKey
     config: dict
 
     def compose(self) -> ComposeResult:
@@ -46,7 +45,6 @@ class ManagerApp(App):
             yield Button("BOM Management", id="bom")
             yield Button("Buy items", id="buy")
 
-    
     @work
     @on(Button.Pressed, "#inv")
     async def action_inv(self):
@@ -56,28 +54,31 @@ class ManagerApp(App):
             )
         self.push_screen(InventoryMenu(self.config["inv_id"]))
 
-    
     @work
     @on(Button.Pressed, "#bom")
     async def action_bom(self):
-        id = await self.push_screen_wait(FileSelect(self.credentials))
-        self.push_screen(InventoryMenu(id))
+        if "bom_id" not in self.config.keys():
+            self.config.update(
+                {"bom_id": await self.push_screen_wait(FileSelect(self.credentials))}
+            )
+        self.push_screen(InventoryMenu(self.config["bom_id"]))
 
-    
     def action_toggle_dark(self) -> None:
         self.dark = not self.dark
 
-    
     def action_loading_screen(self, message: str) -> None:
         self.push_screen(LoadingScreen(message))
 
-    
     @work
     async def on_mount(self):
         self.title = "Inventory Manager"
-        self.credentials = await self.push_screen_wait(
-            AuthMenu(),
-        )
+        cached = GoogleCreds.cached()
+        if not cached:
+            self.push_screen(AuthMenu())
+        self.credentials = GoogleCreds()
+        if not cached:
+            self.pop_screen()
+
         self.config = json.loads(loadFile("config.json").read_text())
 
         def write_config(self):

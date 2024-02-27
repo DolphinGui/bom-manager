@@ -56,7 +56,7 @@ class GoogleSheets(Table):
         with build("sheets", "v4", credentials=self.credentials) as service:
             sh = service.spreadsheets().values()
             sh.batchUpdate(spreadsheetId=self.sheet_id, body=request).execute()
-
+Table.register(GoogleSheets)
 
 class GoogleCreds(AccessKey):
     credentials: Credentials
@@ -87,7 +87,7 @@ class GoogleCreds(AccessKey):
         x = cache.getFile("creds.json")
         return x.exists()
 
-    def list_tables(self, term: str) -> list[AccessKey.TableName]:
+    def list_tables(self, term: str | None) -> list[AccessKey.TableName]:
         with build("drive", "v3", credentials=self.credentials) as service:
             if term is None:
                 query = ""
@@ -105,3 +105,4 @@ class GoogleCreds(AccessKey):
 
     def get_table(self, id: str) -> GoogleSheets:
         return GoogleSheets(self.credentials, id)
+AccessKey.register(GoogleCreds)

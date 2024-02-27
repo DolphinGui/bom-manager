@@ -29,8 +29,13 @@ class AccessKey(ABC):
         name: str
         id: str
 
+    @staticmethod
     @abstractmethod
-    def list_tables(self, filter: str) -> list[TableName]:
+    def cached()->bool:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def list_tables(self, filter: str | None) -> list[TableName]:
         raise NotImplementedError()
 
     @abstractmethod

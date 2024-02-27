@@ -1,21 +1,16 @@
-from google.auth.external_account_authorized_user import Credentials
 from textual import on
 from textual.app import ComposeResult
 from textual.widgets import ListView, Input, ListItem, Label
 from textual.screen import ModalScreen
-from googleapiclient.discovery import build
-from typing import NamedTuple, Optional
+from typing import Optional
 
-
-class SheetFile(NamedTuple):
-    name: str
-    id: str
+from inventory_manager.backend.sheets import AccessKey
 
 
 class Sheet(ListItem):
-    file: SheetFile
+    file: AccessKey.TableName
 
-    def __init__(self, sheet: SheetFile) -> None:
+    def __init__(self, sheet: AccessKey.TableName) -> None:
         self.file = sheet
         super().__init__()
 
@@ -24,46 +19,26 @@ class Sheet(ListItem):
 
 
 class FileSelect(ModalScreen[str]):
-
     files: list[Sheet]
-    credentials: Credentials
+    credentials: AccessKey
 
-    
-    def __init__(self, creds: Credentials) -> None:
+    def __init__(self, creds: AccessKey) -> None:
         self.credentials = creds
         self.search()
         super().__init__()
 
-    
     def search(self, term: Optional[str] = None) -> None:
-        with build("drive", "v3", credentials=self.credentials) as service:
-            if term is None:
-                query = ""
-            else:
-                query = f"and name contains '{term}'"
-            sh = (
-                service.files()
-                .list(
-                    q="trashed=false and mimeType='application/vnd.google-apps.spreadsheet'"
-                    + query
-                )
-                .execute()
-            )
-            self.files = [
-                Sheet(sheet=SheetFile(x["name"], x["id"])) for x in sh["files"]
-            ]
+        tables = self.credentials.list_tables(term)
+        self.files = [Sheet(sheet=AccessKey.TableName(x.name, x.id)) for x in tables]
 
-    
     @on(ListView.Selected)
     def choose(self, event: ListView.Selected) -> None:
-        self.dismiss(event.item.file.id) # type: ignore
+        self.dismiss(event.item.file.id)  # type: ignore
 
-    
     def compose(self) -> ComposeResult:
         yield Input(type="text")
         yield ListView(*self.files)
 
-    
     @on(Input.Submitted)
     def submit_query(self, event: Input.Submitted) -> None:
         self.search(event.value)
