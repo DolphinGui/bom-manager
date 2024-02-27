@@ -12,6 +12,7 @@ from textual.coordinate import Coordinate
 from inventory_manager.backend.base import Update
 from inventory_manager.frontend.file_select import FileSelect
 from ..backend.sheets import GoogleCreds, GoogleSheets
+from ..cache import gconfig
 
 
 class InventoryMenu(Screen):
@@ -21,12 +22,10 @@ class InventoryMenu(Screen):
     creds: GoogleCreds
     sheets: GoogleSheets
     type: str
-    config: dict
 
-    def __init__(self, type: str, config: dict) -> None:
+    def __init__(self, type: str) -> None:
         self.changelist = set[Coordinate]()
         self.type = type
-        self.config = config
         super().__init__()
 
     def compose(self) -> ComposeResult:
@@ -92,7 +91,7 @@ class InventoryMenu(Screen):
     @work
     async def on_mount(self) -> None:
         self.creds = GoogleCreds()
-        if self.type not in self.config:
-            self.config[type] = await self.app.push_screen_wait(FileSelect(self.creds))
-        self.sheets = self.creds.get_table(self.config[type])
+        if self.type not in gconfig:
+            gconfig[self.type] = await self.app.push_screen_wait(FileSelect(self.creds))
+        self.sheets = self.creds.get_table(gconfig[self.type])
         self.update_table()
