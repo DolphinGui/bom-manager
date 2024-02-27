@@ -89,9 +89,10 @@ class InventoryMenu(Screen):
         except Exception as e:
             raise NameError from e
 
+    @work
     async def on_mount(self) -> None:
         self.creds = GoogleCreds()
         if self.type not in self.config:
-            self.config[type] = self.app.push_screen_wait(FileSelect(self.creds))
+            self.config[type] = await self.app.push_screen_wait(FileSelect(self.creds))
         self.sheets = self.creds.get_table(self.config[type])
         self.update_table()
