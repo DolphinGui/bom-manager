@@ -17,6 +17,10 @@ class Table(ABC):
     @abstractmethod
     def update(self, sheet: str, updates: list[Update]) -> None:
         raise NotImplementedError()
+    
+    @abstractmethod
+    def full_update(self, sheet: str, data: list[list[str]]) -> None:
+        raise NotImplementedError()
 
     @abstractmethod
     def list_sheets(self) -> list[str]:

@@ -2,14 +2,12 @@ from datetime import datetime
 from appdirs import AppDirs
 from pathlib import Path
 import os
-from .secrets import secretjson
 
 app_dirs = AppDirs("Inventory Manager", "Shin Umeda", "1.0")
 dir = app_dirs.user_config_dir
 logs = app_dirs.user_log_dir
 
 default_files = {
-    "secrets.json": secretjson,
     "config.json": "{}",
 }
 
