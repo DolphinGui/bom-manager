@@ -10,6 +10,7 @@ from textual.events import Key
 from textual.coordinate import Coordinate
 
 from inventory_manager.backend.base import Update
+from inventory_manager.frontend.file_select import FileSelect
 from ..backend.sheets import GoogleCreds, GoogleSheets
 
 
@@ -19,11 +20,13 @@ class InventoryMenu(Screen):
     changelist: set[Coordinate]
     creds: GoogleCreds
     sheets: GoogleSheets
+    type: str
+    config: dict
 
-    def __init__(self, sheet_id: str) -> None:
+    def __init__(self, type: str, config: dict) -> None:
         self.changelist = set[Coordinate]()
-        self.creds = GoogleCreds()
-        self.sheets = self.creds.get_table(sheet_id)
+        self.type = type
+        self.config = config
         super().__init__()
 
     def compose(self) -> ComposeResult:
@@ -86,5 +89,9 @@ class InventoryMenu(Screen):
         except Exception as e:
             raise NameError from e
 
-    def on_mount(self) -> None:
+    async def on_mount(self) -> None:
+        self.creds = GoogleCreds()
+        if self.type not in self.config:
+            self.config[type] = self.app.push_screen_wait(FileSelect(self.creds))
+        self.sheets = self.creds.get_table(self.config[type])
         self.update_table()
