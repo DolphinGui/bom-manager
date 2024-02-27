@@ -56,7 +56,7 @@ class FileSelect(ModalScreen[str]):
     
     @on(ListView.Selected)
     def choose(self, event: ListView.Selected) -> None:
-        self.dismiss(event.item.file.id)
+        self.dismiss(event.item.file.id) # type: ignore
 
     
     def compose(self) -> ComposeResult:

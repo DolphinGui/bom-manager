@@ -17,7 +17,7 @@ default_files = {
 def getLogpath() -> Path:
     if not os.path.exists(logs):
         os.makedirs(logs)
-    return Path(logs) / f"log-{datetime.now()}.txt"
+    return Path(logs) / f"log-{datetime.now()}.txt".replace(' ', '-')
 
 
 def getFile(filename: str) -> Path:

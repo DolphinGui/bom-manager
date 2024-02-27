@@ -35,7 +35,7 @@ class ManagerApp(App):
     CSS_PATH = "app.tcss"
     SCREENS = {}
 
-    credentials: Optional[Credentials]
+    credentials: Credentials
     config: dict
 
     def compose(self) -> ComposeResult:
@@ -54,14 +54,14 @@ class ManagerApp(App):
             self.config.update(
                 {"inv_id": await self.push_screen_wait(FileSelect(self.credentials))}
             )
-        self.push_screen(InventoryMenu(self.credentials, self.config["inv_id"]))
+        self.push_screen(InventoryMenu(self.config["inv_id"]))
 
     
     @work
     @on(Button.Pressed, "#bom")
     async def action_bom(self):
         id = await self.push_screen_wait(FileSelect(self.credentials))
-        self.push_screen(InventoryMenu(self.credentials, id))
+        self.push_screen(InventoryMenu(id))
 
     
     def action_toggle_dark(self) -> None:
