@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 import json
 from .base import Table, AccessKey, Update
 from google.auth.external_account_authorized_user import Credentials as ExCred
@@ -13,7 +12,7 @@ from ..secrets import secretjson
 Credentials = ExCred | OathCred
 
 
-def notate_r1(column: int, row: int) -> str:
+def notate_r1(row: int, column: int) -> str:
     col = chr(ord("@") + column + 1)
     return col + str(row + 1)
 

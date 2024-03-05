@@ -1,6 +1,6 @@
 from textual.app import App
 from inventory_manager.backend.base import AccessKey
-from inventory_manager.backend.sheets import GoogleCreds
+from .backend.factories import get_key, cached
 from .cache import getLogpath
 from .frontend.auth import AuthMenu
 from textual.screen import Screen
@@ -57,7 +57,7 @@ class ManagerApp(App):
 
     @work(thread=True)
     async def get_credentials(self):
-        self.credentials = GoogleCreds()
+        self.credentials = get_key()
         self.pop_screen()
         pass
 
@@ -67,15 +67,13 @@ class ManagerApp(App):
             filename=getLogpath(), encoding="utf-8", level=logging.DEBUG
         )
 
-
     def on_mount(self):
         self.switch_mode("dash")
-        cached = GoogleCreds.cached()
-        if not cached:
+        if not cached():
             self.push_screen(AuthMenu())
             self.call_after_refresh(self.get_credentials)
         else:
-            self.credentials = GoogleCreds()
+            self.credentials = get_key()
 
     @on(Button.Pressed, "#inv,#bom")
     def change_mode(self, event: Button.Pressed) -> None:

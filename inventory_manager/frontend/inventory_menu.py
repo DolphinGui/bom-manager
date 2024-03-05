@@ -9,9 +9,9 @@ from textual.message import Message
 from textual.events import Key
 from textual.coordinate import Coordinate
 
-from inventory_manager.backend.base import Update
+from inventory_manager.backend.base import AccessKey, Table, Update
 from inventory_manager.frontend.file_select import FileSelect
-from ..backend.sheets import GoogleCreds, GoogleSheets
+from ..backend.factories import get_key
 from ..cache import gconfig
 
 
@@ -19,8 +19,8 @@ class InventoryMenu(Screen):
     BINDINGS = [("ctrl+s", "save", "Save changes"), ("ctrl+l", "load", "Load changes")]
 
     changelist: set[Coordinate]
-    creds: GoogleCreds
-    sheets: GoogleSheets
+    creds: AccessKey
+    sheets: Table
     type: str
 
     def __init__(self, type: str) -> None:
@@ -90,7 +90,7 @@ class InventoryMenu(Screen):
 
     @work
     async def on_mount(self) -> None:
-        self.creds = GoogleCreds()
+        self.creds = get_key()
         if self.type not in gconfig:
             gconfig[self.type] = await self.app.push_screen_wait(FileSelect(self.creds))
         self.sheets = self.creds.get_table(gconfig[self.type])
