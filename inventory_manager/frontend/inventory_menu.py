@@ -9,10 +9,27 @@ from textual.message import Message
 from textual.events import Key
 from textual.coordinate import Coordinate
 
-from inventory_manager.backend.base import AccessKey, Table, Update
-from inventory_manager.frontend.file_select import FileSelect
+from ..backend.base import AccessKey, Table, Update
+from ..inventory.inv import Bin
+from ..frontend.file_select import FileSelect
 from ..backend.factories import get_key
-from ..cache import gconfig
+from ..cache import global_config
+
+schema = [
+    "Type",
+    "Value",
+    "Package",
+    "Qty",
+    "LCSC ID",
+    "Digikey ID",
+    "Mouser ID",
+    "Purchase URL",
+    "Description",
+    "Device Marking",
+    "Comments",
+    "Aliases",
+    "UUID",
+]
 
 
 class InventoryMenu(Screen):
@@ -53,7 +70,7 @@ class InventoryMenu(Screen):
         self.sheets.update(
             "",
             [
-                Update((x.row + 1, x.column), str(table.get_cell_at(x)))
+                Update((x.row + 1, x.column + 1), str(table.get_cell_at(x)))
                 for x in self.changelist
             ],
         )
@@ -75,6 +92,8 @@ class InventoryMenu(Screen):
     @on(SheetData)
     def handle_update(self, event: SheetData):
         table = self.query_one(DataTable[Text])
+        if event.data[0] != schema:
+            raise RuntimeError("Data does not match schema!", event.data[0], schema)
         table.clear()
         table.columns.clear()
         try:
@@ -84,14 +103,16 @@ class InventoryMenu(Screen):
                     Text(escape(str(cell)), style="italic #03AC13", justify="right")
                     for cell in row
                 ]
-                table.add_row(*styled_row)
+                table.add_row(*styled_row, key=row[schema.index("UUID")])
         except Exception as e:
             raise NameError from e
 
     @work
     async def on_mount(self) -> None:
         self.creds = get_key()
-        if self.type not in gconfig:
-            gconfig[self.type] = await self.app.push_screen_wait(FileSelect(self.creds))
-        self.sheets = self.creds.get_table(gconfig[self.type])
+        if self.type not in global_config:
+            global_config[self.type] = await self.app.push_screen_wait(
+                FileSelect(self.creds)
+            )
+        self.sheets = self.creds.get_table(global_config[self.type])
         self.update_table()

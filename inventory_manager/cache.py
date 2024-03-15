@@ -38,12 +38,12 @@ def loadFile(filename: str) -> Path:
     return Path(dir) / filename
 
 
-gconfig = json.loads(loadFile("config.json").read_text())
+global_config = json.loads(loadFile("config.json").read_text())
 
 
 def write_config():
     f = loadFile("config.json")
-    f.write_text(json.dumps(gconfig))
+    f.write_text(json.dumps(global_config))
 
 
 atexit.register(write_config)

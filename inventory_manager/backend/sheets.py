@@ -13,7 +13,7 @@ Credentials = ExCred | OathCred
 
 
 def notate_r1(row: int, column: int) -> str:
-    col = chr(ord("@") + column + 1)
+    col = chr(ord("@") + column)
     return col + str(row + 1)
 
 
@@ -41,7 +41,7 @@ class GoogleSheets(Table):
                 sh.values()
                 .batchGet(
                     spreadsheetId=self.sheet_id,
-                    ranges=[f"R[0]C[0]:R[{rows}]C[{cols}]"],
+                    ranges=[f"{sheet}!R[0]C[0]:R[{rows}]C[{cols}]"],
                     majorDimension="ROWS",
                 )
                 .execute()["valueRanges"][0]["values"]
@@ -53,7 +53,10 @@ class GoogleSheets(Table):
     def update(self, sheet: str, updates: list[Update]) -> None:
         request = {
             "data": [
-                {"range": notate_r1(x.location[0], x.location[1]), "values": [[x.data]]}
+                {
+                    "range": f"{sheet}!{notate_r1(x.location[0], x.location[1])}",
+                    "values": [[x.data]],
+                }
                 for x in updates
             ],
             "valueInputOption": "USER_ENTERED",
@@ -66,7 +69,9 @@ class GoogleSheets(Table):
         r_len = len(data)
         c_len = len(max(data, key=len))
         request = {
-            "data": [{"range": notate_r1r1(0, 0, r_len, c_len), "values": data}],
+            "data": [
+                {"range": f"{sheet}!{notate_r1r1(0, 0, r_len, c_len)}", "values": data}
+            ],
             "valueInputOption": "USER_ENTERED",
         }
         with build("sheets", "v4", credentials=self.credentials) as service:
